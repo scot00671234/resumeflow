@@ -1,9 +1,7 @@
-import { resolve, dirname } from "path";
-import { fileURLToPath } from "url";
+import { resolve } from "path";
 import dotenv from "dotenv";
 import pg from "pg";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, "../../../.env") });
 
 const url = process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/resume";

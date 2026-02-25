@@ -1,10 +1,8 @@
 import { readFileSync } from "fs";
-import { join, dirname, resolve } from "path";
-import { fileURLToPath } from "url";
+import { join, resolve } from "path";
 import dotenv from "dotenv";
 import pg from "pg";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, "../../../.env") });
 
 const connectionString =
