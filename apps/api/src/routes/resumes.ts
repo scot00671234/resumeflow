@@ -156,6 +156,47 @@ router.patch("/:id", async (req: Request, res: Response<unknown, AuthLocals>): P
   });
 });
 
+// POST /resumes/:id/duplicate — clone resume (same content, new title)
+router.post("/:id/duplicate", async (req: Request, res: Response<unknown, AuthLocals>): Promise<void> => {
+  const userId = res.locals.userId;
+  const id = req.params.id;
+  const [existing] = await db
+    .select()
+    .from(resumes)
+    .where(and(eq(resumes.id, id), eq(resumes.userId, userId)));
+  if (!existing) {
+    res.status(404).json({ error: "Resume not found" });
+    return;
+  }
+  const title = `${existing.title.replace(/\s*\(Copy( \d+)?\)\s*$/, "").trim()} (Copy)`;
+  const slug = slugify(title) || "resume";
+  const [created] = await db
+    .insert(resumes)
+    .values({
+      userId,
+      title,
+      slug: `${slug}-${Date.now().toString(36)}`,
+      templateId: existing.templateId,
+      content: existing.content,
+    })
+    .returning();
+  if (!created) {
+    res.status(500).json({ error: "Failed to duplicate resume" });
+    return;
+  }
+  res.status(201).json({
+    resume: {
+      id: created.id,
+      title: created.title,
+      slug: created.slug,
+      templateId: created.templateId,
+      content: created.content as ResumeContent,
+      createdAt: created.createdAt,
+      updatedAt: created.updatedAt,
+    },
+  });
+});
+
 // DELETE /resumes/:id
 router.delete("/:id", async (req: Request, res: Response<unknown, AuthLocals>): Promise<void> => {
   const userId = res.locals.userId;

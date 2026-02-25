@@ -95,4 +95,8 @@ export const resumesApi = {
     }),
   delete: (id: string) =>
     request<void>(`/resumes/${id}`, { method: "DELETE" }),
+  duplicate: (id: string) =>
+    request<{
+      resume: ResumeListItem & { content: import("@resume/shared").ResumeContent };
+    }>(`/resumes/${id}/duplicate`, { method: "POST" }),
 };
