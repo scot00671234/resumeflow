@@ -21,6 +21,14 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 
+app.get("/", (_req, res) => {
+  res.status(200).json({
+    service: "ResumeFlow API",
+    ok: true,
+    endpoints: ["/health", "/auth/register", "/auth/login", "/auth/me", "/resumes"],
+  });
+});
+
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
