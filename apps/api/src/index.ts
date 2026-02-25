@@ -8,12 +8,17 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import resumeRoutes from "./routes/resumes.js";
+import { pool } from "./db/index.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
 const webOrigin = process.env.WEB_ORIGIN ?? "http://localhost:5173";
 const isProduction = process.env.NODE_ENV === "production";
 const webDist = path.resolve(__dirname, "../../web/dist");
+
+if (isProduction) {
+  app.set("trust proxy", 1);
+}
 
 app.use(
   cors({
@@ -24,8 +29,13 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 
-app.get("/health", (_req, res) => {
-  res.json({ ok: true });
+app.get("/health", async (_req, res) => {
+  try {
+    await pool.query("SELECT 1");
+    res.json({ ok: true, db: "connected" });
+  } catch {
+    res.status(503).json({ ok: false, db: "disconnected" });
+  }
 });
 
 app.use("/auth", authRoutes);
@@ -45,6 +55,11 @@ if (isProduction && fs.existsSync(webDist)) {
     });
   });
 }
+
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error(err);
+  res.status(500).json({ error: "Something went wrong. Please try again." });
+});
 
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);

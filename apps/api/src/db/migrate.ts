@@ -1,4 +1,4 @@
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync } from "fs";
 import { join, resolve } from "path";
 import dotenv from "dotenv";
 import pg from "pg";
@@ -9,12 +9,16 @@ const connectionString =
   process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/resume";
 
 async function main() {
-  const sql = readFileSync(join(__dirname, "migrations", "0000_init.sql"), "utf-8");
+  const migrationsDir = join(__dirname, "migrations");
+  const files = readdirSync(migrationsDir).filter((f) => f.endsWith(".sql")).sort();
   const client = new pg.Client({ connectionString });
   await client.connect();
-  await client.query(sql);
+  for (const file of files) {
+    const sql = readFileSync(join(migrationsDir, file), "utf-8");
+    await client.query(sql);
+    console.log(`Migration ${file} applied.`);
+  }
   await client.end();
-  console.log("Migration 0000_init applied.");
 }
 
 main().catch((e) => {

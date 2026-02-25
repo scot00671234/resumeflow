@@ -30,10 +30,10 @@ async function request<T>(
         // refresh failed, fall through to throw 401
       }
     }
-    const err = new Error((data as { error?: string })?.error ?? "Request failed") as Error & {
-      status: number;
-      details?: unknown;
-    };
+    const message =
+      (data as { error?: string })?.error ??
+      (res.status >= 500 ? "Server unavailable. Try again later." : "Request failed");
+    const err = new Error(message) as Error & { status: number; details?: unknown };
     err.status = res.status;
     err.details = (data as { details?: unknown })?.details;
     throw err;
@@ -60,7 +60,7 @@ export interface ResumeListItem {
 export const authApi = {
   me: () => request<{ user: User }>("/auth/me"),
   register: (email: string, password: string, name?: string) =>
-    request<{ user: User }>("/auth/register", {
+    request<{ user: User; message?: string }>("/auth/register", {
       method: "POST",
       body: { email, password, name },
     }),

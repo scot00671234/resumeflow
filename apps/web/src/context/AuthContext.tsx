@@ -8,7 +8,7 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState & {
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name?: string) => Promise<void>;
+  register: (email: string, password: string, name?: string) => Promise<{ message?: string } | void>;
   logout: () => Promise<void>;
   refetch: () => Promise<void>;
 } | null>(null);
@@ -38,8 +38,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const register = useCallback(async (email: string, password: string, name?: string) => {
-    const { user: u } = await authApi.register(email, password, name);
-    setUser(u);
+    const data = await authApi.register(email, password, name);
+    setUser(data.user);
+    return data.message ? { message: data.message } : undefined;
   }, []);
 
   const logout = useCallback(async () => {

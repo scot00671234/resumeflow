@@ -17,8 +17,14 @@ export default function Register() {
     setError("");
     setLoading(true);
     try {
-      await register(email, password, name || undefined);
-      navigate("/dashboard");
+      const result = await register(email, password, name || undefined);
+      if (result?.message) {
+        setError("");
+            setSuccess(result.message);
+            setTimeout(() => navigate("/dashboard"), 2000);
+          } else {
+            navigate("/dashboard");
+          }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign up failed");
     } finally {
@@ -40,11 +46,8 @@ export default function Register() {
           <p className="auth-subtitle">Sign up and start building resumes instantly.</p>
         </div>
       <form onSubmit={handleSubmit} className="form-grid">
-        {error && (
-          <p className="status-text status-error">
-            {error}
-          </p>
-        )}
+        {error && <p className="status-text status-error">{error}</p>}
+        {success && <p className="status-text status-success">{success}</p>}
         <label className="field">
           <span className="label">Email</span>
           <input

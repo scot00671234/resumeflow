@@ -1,7 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Landing() {
+  const [searchParams] = useSearchParams();
+  const verified = searchParams.get("verified") === "1";
+
   return (
     <div className="page-enter">
       <header className="topbar">
@@ -22,6 +25,11 @@ export default function Landing() {
       </header>
 
       <main className="hero container">
+        {verified && (
+          <p className="status-text status-success" style={{ marginBottom: "1rem" }}>
+            Email verified. You can log in now.
+          </p>
+        )}
         <section className="hero-grid">
           <div>
             <span className="hero-kicker">AI Resume Builder</span>

@@ -55,8 +55,9 @@ See `.env.example`. Required for API: `DATABASE_URL`, `JWT_SECRET`, `JWT_REFRESH
 
 ## Deploy (Nixpacks + VPS)
 
-- Build API: from `apps/api`, Nixpacks detects Node/TS; add `nixpacks.toml` if you need custom build/start.
-- Run migrations on the server (e.g. `DATABASE_URL=... npm run db:migrate` in `apps/api`).
-- Set env on VPS; run the built API and serve the web build (e.g. from API as static or separate host).
+- Root `nixpacks.toml` builds API + web and runs `npm run start` (API serves the web app in production).
+- **Production checklist:** Set `DATABASE_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET` (min 32 chars). Set `APP_URL` and `WEB_ORIGIN` to your public app URL (e.g. `https://yourapp.com`). Run migrations once: `npm run db:setup` or `npm run db:migrate` with `DATABASE_URL` set.
+- **Health check:** `GET /health` returns `{ ok, db }`; if DB is down it returns 503 so you can debug connectivity.
+- **Email verification (optional):** Set `SMTP_URL` and `EMAIL_FROM` to send verification emails on signup. Users get a link to verify; without SMTP, signup still works and no email is sent.
 
 See `docs/BUILD_PLAN.md` for full deployment and Phase 2+ (editor, AI, export).

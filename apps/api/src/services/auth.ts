@@ -2,8 +2,11 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { db } from "../db/index.js";
-import { users, refreshTokens } from "../db/schema.js";
+import { users, refreshTokens, emailVerificationTokens } from "../db/schema.js";
 import { and, eq, gt } from "drizzle-orm";
+
+const VERIFICATION_TOKEN_BYTES = 32;
+const VERIFICATION_EXPIRY_HOURS = 24;
 
 const SALT_ROUNDS = 10;
 const ACCESS_SECRET = process.env.JWT_SECRET ?? "dev-access-secret";
@@ -89,4 +92,40 @@ export async function findUserByRefreshToken(
   const row = rows[0];
   if (!row) return null;
   return { id: row.id, email: row.email, name: row.name };
+}
+
+export function generateVerificationToken(): string {
+  return crypto.randomBytes(VERIFICATION_TOKEN_BYTES).toString("hex");
+}
+
+export async function createVerificationToken(userId: string): Promise<string> {
+  const token = generateVerificationToken();
+  const tokenHash = hashToken(token);
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + VERIFICATION_EXPIRY_HOURS);
+  await db.insert(emailVerificationTokens).values({
+    userId,
+    tokenHash,
+    expiresAt,
+  });
+  return token;
+}
+
+export async function verifyAndConsumeVerificationToken(
+  token: string
+): Promise<{ userId: string } | null> {
+  const tokenHash = hashToken(token);
+  const rows = await db
+    .select({ userId: emailVerificationTokens.userId })
+    .from(emailVerificationTokens)
+    .where(
+      and(
+        eq(emailVerificationTokens.tokenHash, tokenHash),
+        gt(emailVerificationTokens.expiresAt, new Date())
+      )
+    );
+  const row = rows[0];
+  if (!row) return null;
+  await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.tokenHash, tokenHash));
+  return { userId: row.userId };
 }
