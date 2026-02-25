@@ -1,0 +1,23 @@
+{
+  "name": "resume-builder",
+  "private": true,
+  "scripts": {
+    "dev": "npm run build -w packages/shared && npx concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "build": "npm run build -w packages/shared && npm run build -w apps/api && npm run build -w apps/web",
+    "db:generate": "npm run db:generate --workspace=apps/api",
+    "db:ensure": "npm run db:ensure --workspace=apps/api",
+    "db:migrate": "npm run db:migrate --workspace=apps/api",
+    "db:setup": "npm run db:ensure && npm run db:migrate",
+    "db:studio": "npm run db:studio --workspace=apps/api"
+  },
+  "workspaces": [
+    "apps/api",
+    "apps/web",
+    "packages/shared"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
