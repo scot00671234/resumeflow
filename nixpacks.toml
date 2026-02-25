@@ -1,5 +1,8 @@
 [phases.install]
-cmds = ["npm ci"]
+cmds = ["npm ci --include=dev"]
+
+[variables]
+NPM_CONFIG_PRODUCTION = "false"
 
 [phases.build]
 cmds = ["npm run build:api"]
